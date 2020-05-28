@@ -22,8 +22,6 @@
 //
 // It does not work with cgo.
 //
-// It does not work with renamed imports.
-//
 // It does not correctly translate struct literals when prefixing is enabled
 // and a field key in the literal key is the same as a top-level name.
 //
@@ -201,8 +199,7 @@ func main() {
 
 // NOTE: Below here stolen from gofix, should probably be in a library eventually.
 
-// addImport adds the import path to the file f, if absent.
-// importName may be nil
+// addImport adds the import path to the file f, if absent. importName may be nil
 // Copied from cmd/fix.
 func addImport(f *ast.File, ipath string, importName *ast.Ident) (added bool) {
 	if imports(f, ipath) {
