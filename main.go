@@ -158,10 +158,6 @@ func main() {
 		} else {
 			f.Name = &ast.Ident{Name: "PACKAGE-DELETE-ME"}
 			for _, spec := range f.Imports {
-				if spec.Name != nil {
-					fmt.Printf("%s: renamed import not supported", fset.Position(spec.Name.Pos()))
-					continue
-				}
 				path, err := strconv.Unquote(spec.Path.Value)
 				if err != nil {
 					fmt.Printf("%s: invalid quoted string %s", fset.Position(spec.Name.Pos()), spec.Path.Value)
@@ -171,7 +167,7 @@ func main() {
 					fmt.Printf("%s: import \"C\" not supported", fset.Position(spec.Name.Pos()))
 					continue
 				}
-				addImport(f0, path)
+				addImport(f0, path, spec.Name)
 			}
 			decls := f.Decls[:0]
 			for _, d := range f.Decls {
@@ -206,8 +202,9 @@ func main() {
 // NOTE: Below here stolen from gofix, should probably be in a library eventually.
 
 // addImport adds the import path to the file f, if absent.
+// importName may be nil
 // Copied from cmd/fix.
-func addImport(f *ast.File, ipath string) (added bool) {
+func addImport(f *ast.File, ipath string, importName *ast.Ident) (added bool) {
 	if imports(f, ipath) {
 		return false
 	}
@@ -224,6 +221,7 @@ func addImport(f *ast.File, ipath string) (added bool) {
 			Kind:  token.STRING,
 			Value: strconv.Quote(ipath),
 		},
+		Name: importName,
 	}
 
 	// Find an import decl to add to.
