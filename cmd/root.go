@@ -38,17 +38,13 @@ It does not correctly translate struct literals when prefixing is enabled
 and a field key in the literal key is the same as a top-level name.
 
 It does not work with embedded struct fields.`,
+		Args: cobra.MinimumNArgs(1),
 		Run: cat,
 	}
 )
 
-func die(v ...interface{}) {
-	_, _ = fmt.Fprint(os.Stderr, v)
-	os.Exit(1)
-}
-
-func er(msg interface{}) {
-	fmt.Println("Error:", msg)
+func er(msg ...interface{}) {
+	_, _ = fmt.Fprintln(os.Stderr, "Error:", msg)
 	os.Exit(1)
 }
 
@@ -89,12 +85,12 @@ func cat(_ *cobra.Command, args []string) {
 
 		f, err := parser.ParseFile(fset, name, nil, parser.ParseComments)
 		if err != nil {
-			die(err)
+			er(err)
 		}
 		files[name] = f
 		if viper.GetBool("delete-source-files") {
 			if err := os.Remove(name); err != nil {
-				die(err)
+				er(err)
 			}
 		}
 	}
@@ -206,11 +202,11 @@ func cat(_ *cobra.Command, args []string) {
 
 	f, err := parser.ParseFile(fset, "rewritten", data, parser.ParseComments)
 	if err != nil {
-		die(err)
+		er(err)
 	}
 
 	if err := format.Node(os.Stdout, fset, f); err != nil {
-		die(err)
+		er(err)
 	}
 }
 
