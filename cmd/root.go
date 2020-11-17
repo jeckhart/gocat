@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
@@ -59,6 +60,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("package", "p", "", "package name to use in output file")
 	rootCmd.PersistentFlags().StringP("prefix", "x", "", "prefix to add to all top-level names")
 	rootCmd.PersistentFlags().BoolP("ignore-tests", "n", false, "ignore test files")
+	rootCmd.PersistentFlags().StringP("output-file", "o", "-", "filename to send output (use - for stdout)")
 	//rootCmd.PersistentFlags().BoolP("delete-source-files", "k", false, "delete concatenated source files from disk")
 
 	viper.SetDefault("delete-source-files", false)
@@ -205,9 +207,29 @@ func cat(_ *cobra.Command, args []string) {
 		er(err)
 	}
 
-	if err := format.Node(os.Stdout, fset, f); err != nil {
+	var out *bufio.Writer
+	if viper.GetString("output-file") != "-" {
+		outf, err := os.Create(viper.GetString("output-file"))
+		if err != nil {
+			er(err)
+		}
+		out = bufio.NewWriter(outf)
+		defer func() {
+			if err := outf.Close(); err != nil {
+				er(err)
+			}
+		}()
+	} else {
+		out = bufio.NewWriter(os.Stdout)
+	}
+
+	if err := format.Node(out, fset, f); err != nil {
 		er(err)
 	}
+	if err := out.Flush(); err != nil {
+		er(err)
+	}
+
 }
 
 // NOTE: Below here stolen from gofix, should probably be in a library eventually.
